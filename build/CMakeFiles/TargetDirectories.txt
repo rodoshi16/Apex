@@ -1,3 +1,4 @@
+/Users/rodoshimondal/apex/build/CMakeFiles/apex_lib.dir
 /Users/rodoshimondal/apex/build/CMakeFiles/apex.dir
 /Users/rodoshimondal/apex/build/CMakeFiles/edit_cache.dir
 /Users/rodoshimondal/apex/build/CMakeFiles/rebuild_cache.dir

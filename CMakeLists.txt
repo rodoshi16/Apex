@@ -16,8 +16,10 @@ FetchContent_Declare(googlebenchmark
 
 FetchContent_MakeAvailable(googletest googlebenchmark)
 
-add_library(apex_lib INTERFACE)
-target_include_directories(apex_lib INTERFACE include)
+add_library(apex_lib
+    src/price_level.cpp
+)
+target_include_directories(apex_lib PUBLIC ${CMAKE_SOURCE_DIR}/include)
 
 add_executable(apex src/main.cpp)
 target_link_libraries(apex PRIVATE apex_lib)

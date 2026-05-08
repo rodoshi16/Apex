@@ -36,13 +36,47 @@ include CMakeFiles/rules.ninja
 
 cmake_ninja_workdir = /Users/rodoshimondal/apex/build/
 # =============================================================================
+# Object build statements for STATIC_LIBRARY target apex_lib
+
+
+#############################################
+# Order-only phony target for apex_lib
+
+build cmake_object_order_depends_target_apex_lib: phony || .
+
+build CMakeFiles/apex_lib.dir/src/price_level.cpp.o: CXX_COMPILER__apex_lib_unscanned_ /Users/rodoshimondal/apex/src/price_level.cpp || cmake_object_order_depends_target_apex_lib
+  DEP_FILE = CMakeFiles/apex_lib.dir/src/price_level.cpp.o.d
+  FLAGS = -std=gnu++20 -arch arm64
+  INCLUDES = -I/Users/rodoshimondal/apex/include
+  OBJECT_DIR = CMakeFiles/apex_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles/apex_lib.dir/src
+  TARGET_SUPPORT_DIR = CMakeFiles/apex_lib.dir
+
+
+# =============================================================================
+# Link build statements for STATIC_LIBRARY target apex_lib
+
+
+#############################################
+# Link the static library libapex_lib.a
+
+build libapex_lib.a: CXX_STATIC_LIBRARY_LINKER__apex_lib_ CMakeFiles/apex_lib.dir/src/price_level.cpp.o
+  ARCH_FLAGS = -arch arm64
+  OBJECT_DIR = CMakeFiles/apex_lib.dir
+  POST_BUILD = :
+  PRE_LINK = :
+  TARGET_FILE = libapex_lib.a
+  TARGET_PDB = apex_lib.a.dbg
+  TARGET_SUPPORT_DIR = CMakeFiles/apex_lib.dir
+
+# =============================================================================
 # Object build statements for EXECUTABLE target apex
 
 
 #############################################
 # Order-only phony target for apex
 
-build cmake_object_order_depends_target_apex: phony || .
+build cmake_object_order_depends_target_apex: phony || cmake_object_order_depends_target_apex_lib
 
 build CMakeFiles/apex.dir/src/main.cpp.o: CXX_COMPILER__apex_unscanned_ /Users/rodoshimondal/apex/src/main.cpp || cmake_object_order_depends_target_apex
   DEP_FILE = CMakeFiles/apex.dir/src/main.cpp.o.d
@@ -60,9 +94,10 @@ build CMakeFiles/apex.dir/src/main.cpp.o: CXX_COMPILER__apex_unscanned_ /Users/r
 #############################################
 # Link the executable apex
 
-build apex: CXX_EXECUTABLE_LINKER__apex_ CMakeFiles/apex.dir/src/main.cpp.o
+build apex: CXX_EXECUTABLE_LINKER__apex_ CMakeFiles/apex.dir/src/main.cpp.o | libapex_lib.a || libapex_lib.a
   FLAGS = -arch arm64
   LINK_FLAGS = -Wl,-search_paths_first -Wl,-headerpad_max_install_names
+  LINK_LIBRARIES = libapex_lib.a
   OBJECT_DIR = CMakeFiles/apex.dir
   POST_BUILD = :
   PRE_LINK = :
@@ -2830,7 +2865,7 @@ build _deps/googlebenchmark-build/test/install/strip: phony _deps/googlebenchmar
 #############################################
 # Order-only phony target for apex_tests
 
-build cmake_object_order_depends_target_apex_tests: phony || cmake_object_order_depends_target_gtest cmake_object_order_depends_target_gtest_main
+build cmake_object_order_depends_target_apex_tests: phony || cmake_object_order_depends_target_apex_lib cmake_object_order_depends_target_gtest cmake_object_order_depends_target_gtest_main
 
 build tests/CMakeFiles/apex_tests.dir/test_order.cpp.o: CXX_COMPILER__apex_tests_unscanned_ /Users/rodoshimondal/apex/tests/test_order.cpp || cmake_object_order_depends_target_apex_tests
   DEP_FILE = tests/CMakeFiles/apex_tests.dir/test_order.cpp.o.d
@@ -2848,10 +2883,10 @@ build tests/CMakeFiles/apex_tests.dir/test_order.cpp.o: CXX_COMPILER__apex_tests
 #############################################
 # Link the executable tests/apex_tests
 
-build tests/apex_tests: CXX_EXECUTABLE_LINKER__apex_tests_ tests/CMakeFiles/apex_tests.dir/test_order.cpp.o | lib/libgtest_main.a lib/libgtest.a || lib/libgtest.a lib/libgtest_main.a
+build tests/apex_tests: CXX_EXECUTABLE_LINKER__apex_tests_ tests/CMakeFiles/apex_tests.dir/test_order.cpp.o | libapex_lib.a lib/libgtest_main.a lib/libgtest.a || lib/libgtest.a lib/libgtest_main.a libapex_lib.a
   FLAGS = -arch arm64
   LINK_FLAGS = -Wl,-search_paths_first -Wl,-headerpad_max_install_names
-  LINK_LIBRARIES = lib/libgtest_main.a  lib/libgtest.a
+  LINK_LIBRARIES = libapex_lib.a  lib/libgtest_main.a  lib/libgtest.a
   OBJECT_DIR = tests/CMakeFiles/apex_tests.dir
   POST_BUILD = :
   PRE_LINK = :
@@ -2937,7 +2972,7 @@ build tests/install/strip: phony tests/CMakeFiles/install/strip.util
 #############################################
 # Order-only phony target for apex_bench
 
-build cmake_object_order_depends_target_apex_bench: phony || cmake_object_order_depends_target_benchmark cmake_object_order_depends_target_benchmark_main
+build cmake_object_order_depends_target_apex_bench: phony || cmake_object_order_depends_target_apex_lib cmake_object_order_depends_target_benchmark cmake_object_order_depends_target_benchmark_main
 
 build benchmarks/CMakeFiles/apex_bench.dir/bench_order_book.cpp.o: CXX_COMPILER__apex_bench_unscanned_ /Users/rodoshimondal/apex/benchmarks/bench_order_book.cpp || cmake_object_order_depends_target_apex_bench
   DEFINES = -DBENCHMARK_STATIC_DEFINE
@@ -2956,10 +2991,10 @@ build benchmarks/CMakeFiles/apex_bench.dir/bench_order_book.cpp.o: CXX_COMPILER_
 #############################################
 # Link the executable benchmarks/apex_bench
 
-build benchmarks/apex_bench: CXX_EXECUTABLE_LINKER__apex_bench_ benchmarks/CMakeFiles/apex_bench.dir/bench_order_book.cpp.o | _deps/googlebenchmark-build/src/libbenchmark_main.a _deps/googlebenchmark-build/src/libbenchmark.a || _deps/googlebenchmark-build/src/libbenchmark.a _deps/googlebenchmark-build/src/libbenchmark_main.a
+build benchmarks/apex_bench: CXX_EXECUTABLE_LINKER__apex_bench_ benchmarks/CMakeFiles/apex_bench.dir/bench_order_book.cpp.o | libapex_lib.a _deps/googlebenchmark-build/src/libbenchmark_main.a _deps/googlebenchmark-build/src/libbenchmark.a || _deps/googlebenchmark-build/src/libbenchmark.a _deps/googlebenchmark-build/src/libbenchmark_main.a libapex_lib.a
   FLAGS = -arch arm64
   LINK_FLAGS = -Wl,-search_paths_first -Wl,-headerpad_max_install_names
-  LINK_LIBRARIES = _deps/googlebenchmark-build/src/libbenchmark_main.a  _deps/googlebenchmark-build/src/libbenchmark.a
+  LINK_LIBRARIES = libapex_lib.a  _deps/googlebenchmark-build/src/libbenchmark_main.a  _deps/googlebenchmark-build/src/libbenchmark.a
   OBJECT_DIR = benchmarks/CMakeFiles/apex_bench.dir
   POST_BUILD = :
   PRE_LINK = :
@@ -3037,6 +3072,8 @@ build benchmarks/install/strip: phony benchmarks/CMakeFiles/install/strip.util
 # Target aliases.
 
 build apex_bench: phony benchmarks/apex_bench
+
+build apex_lib: phony libapex_lib.a
 
 build apex_tests: phony tests/apex_tests
 
@@ -3176,7 +3213,7 @@ build user_counters_threads_test: phony _deps/googlebenchmark-build/test/user_co
 #############################################
 # Folder: /Users/rodoshimondal/apex/build
 
-build all: phony apex _deps/googletest-build/all _deps/googlebenchmark-build/all tests/all benchmarks/all
+build all: phony libapex_lib.a apex _deps/googletest-build/all _deps/googlebenchmark-build/all tests/all benchmarks/all
 
 # =============================================================================
 
