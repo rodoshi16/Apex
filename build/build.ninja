@@ -52,6 +52,14 @@ build CMakeFiles/apex_lib.dir/src/price_level.cpp.o: CXX_COMPILER__apex_lib_unsc
   OBJECT_FILE_DIR = CMakeFiles/apex_lib.dir/src
   TARGET_SUPPORT_DIR = CMakeFiles/apex_lib.dir
 
+build CMakeFiles/apex_lib.dir/src/order_book.cpp.o: CXX_COMPILER__apex_lib_unscanned_ /Users/rodoshimondal/apex/src/order_book.cpp || cmake_object_order_depends_target_apex_lib
+  DEP_FILE = CMakeFiles/apex_lib.dir/src/order_book.cpp.o.d
+  FLAGS = -std=gnu++20 -arch arm64
+  INCLUDES = -I/Users/rodoshimondal/apex/include
+  OBJECT_DIR = CMakeFiles/apex_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles/apex_lib.dir/src
+  TARGET_SUPPORT_DIR = CMakeFiles/apex_lib.dir
+
 
 # =============================================================================
 # Link build statements for STATIC_LIBRARY target apex_lib
@@ -60,7 +68,7 @@ build CMakeFiles/apex_lib.dir/src/price_level.cpp.o: CXX_COMPILER__apex_lib_unsc
 #############################################
 # Link the static library libapex_lib.a
 
-build libapex_lib.a: CXX_STATIC_LIBRARY_LINKER__apex_lib_ CMakeFiles/apex_lib.dir/src/price_level.cpp.o
+build libapex_lib.a: CXX_STATIC_LIBRARY_LINKER__apex_lib_ CMakeFiles/apex_lib.dir/src/price_level.cpp.o CMakeFiles/apex_lib.dir/src/order_book.cpp.o
   ARCH_FLAGS = -arch arm64
   OBJECT_DIR = CMakeFiles/apex_lib.dir
   POST_BUILD = :

@@ -2,36 +2,64 @@
 #include <vector>
 #include "apex/order.hpp"
 #include "apex/event.hpp"
-#include "apex/price_level.hpp"
+#include "apex/order_book.hpp"
 
 using namespace apex;
 
-Order make_order(uint64_t id, uint64_t qty, Side side) {
-    return Order{id, 0, 10000, qty, 0, side, OrderType::Limit, OrderStatus::New};
+Order make_limit(uint64_t id, Side side, int64_t price, uint64_t qty) {
+    return Order{id, 0, price, qty, 0, side, OrderType::Limit, OrderStatus::New};
+}
+
+Order make_market(uint64_t id, Side side, uint64_t qty) {
+    return Order{id, 0, 0, qty, 0, side, OrderType::Market, OrderStatus::New};
+}
+
+void print_book(const OrderBook& book) {
+    std::cout << "  best bid: ";
+    if (book.has_bid()) std::cout << book.best_bid().value();
+    else std::cout << "none";
+
+    std::cout << " | best ask: ";
+    if (book.has_ask()) std::cout << book.best_ask().value();
+    else std::cout << "none";
+
+    std::cout << " | spread: " << book.spread() << "\n";
+    std::cout << "  bid depth: " << book.bid_depth();
+    std::cout << " | ask depth: " << book.ask_depth() << "\n";
 }
 
 int main() {
-    PriceLevel level(10000);
-
-    // Add three orders
-    level.add_order(make_order(1, 100, Side::Bid));
-    level.add_order(make_order(2, 200, Side::Bid));
-    level.add_order(make_order(3, 150, Side::Bid));
-
-    std::cout << "total quantity: " << level.total_quantity() << "\n"; // should be 450
-
-    // Cancel order 2
-    level.cancel_order(2);
-    std::cout << "after cancel:   " << level.total_quantity() << "\n"; // should be 250
-
-    // Fill 100 — should hit order 1 first (FIFO)
+    OrderBook book;
     std::vector<Event> events;
-    uint64_t filled = level.fill(100, events);
 
-    std::cout << "filled:         " << filled << "\n";          // should be 100
-    std::cout << "events:         " << events.size() << "\n";   // should be 1
-    std::cout << "filled order:   " << events[0].order_id << "\n"; // should be 1
-    std::cout << "remaining:      " << level.total_quantity() << "\n"; // should be 150
+    std::cout << "=== TEST 1: Build the book ===\n";
+    book.add_order(make_limit(1, Side::Bid, 9900, 100), events);
+    book.add_order(make_limit(2, Side::Bid, 9950, 200), events);
+    book.add_order(make_limit(3, Side::Ask, 10000, 150), events);
+    book.add_order(make_limit(4, Side::Ask, 10050, 100), events);
+    print_book(book);
+    // best bid should be 9950, best ask 10000, spread 50
+
+    std::cout << "\n=== TEST 2: Market buy order matches against best ask ===\n";
+    events.clear();
+    book.add_order(make_market(5, Side::Bid, 100), events);
+    std::cout << "  events generated: " << events.size() << "\n";
+    print_book(book);
+    // ask at 10000 had 150, we bought 100, so 50 should remain
+
+    std::cout << "\n=== TEST 3: Cancel a resting order ===\n";
+    events.clear();
+    book.cancel_order(2, events);
+    std::cout << "  events generated: " << events.size() << "\n";
+    print_book(book);
+    // bid depth should drop by 200
+
+    std::cout << "\n=== TEST 4: Limit order crosses the spread and matches ===\n";
+    events.clear();
+    book.add_order(make_limit(6, Side::Bid, 10000, 200), events);
+    std::cout << "  events generated: " << events.size() << "\n";
+    print_book(book);
+    // should match against remaining 50 at ask 10000, then 150 rest on book as bid
 
     return 0;
 }

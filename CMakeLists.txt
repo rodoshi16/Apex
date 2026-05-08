@@ -18,6 +18,7 @@ FetchContent_MakeAvailable(googletest googlebenchmark)
 
 add_library(apex_lib
     src/price_level.cpp
+    src/order_book.cpp 
 )
 target_include_directories(apex_lib PUBLIC ${CMAKE_SOURCE_DIR}/include)
 
