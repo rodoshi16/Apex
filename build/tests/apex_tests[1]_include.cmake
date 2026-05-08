@@ -1,0 +1,5 @@
+if(EXISTS "/Users/rodoshimondal/apex/build/tests/apex_tests[1]_tests.cmake")
+  include("/Users/rodoshimondal/apex/build/tests/apex_tests[1]_tests.cmake")
+else()
+  add_test(apex_tests_NOT_BUILT apex_tests_NOT_BUILT)
+endif()

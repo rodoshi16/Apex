@@ -1,0 +1,17 @@
+{
+  "tests": 1,
+  "name": "AllTests",
+  "testsuites": [
+    {
+      "name": "Placeholder",
+      "tests": 1,
+      "testsuite": [
+        {
+          "name": "AlwaysPasses",
+          "file": "\/Users\/rodoshimondal\/apex\/tests\/test_order.cpp",
+          "line": 3
+        }
+      ]
+    }
+  ]
+}

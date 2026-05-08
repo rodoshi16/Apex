@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/rodoshimondal/apex/build/_deps/googlebenchmark-subbuild/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
