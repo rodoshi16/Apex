@@ -8,8 +8,7 @@ exchanges — specifically, how data structure choices and concurrency design
 determine latency characteristics at scale.
 
 ## Architecture
-Bid Side (highest price first)        Ask Side (lowest price first)
-─────────────────────────────         ─────────────────────────────
+Bid Side (highest price first)        Ask Side (lowest price first
 $100.02  [Order A] → [Order B]        $100.03  [Order C]
 $100.01  [Order D]                    $100.05  [Order E] → [Order F]
 ↕ matching engine ↕
