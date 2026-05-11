@@ -7,8 +7,6 @@ order types. Built to study the systems engineering problems inside financial
 exchanges — specifically, how data structure choices and concurrency design 
 determine latency characteristics at scale.
 
----
-
 ## Architecture
 Bid Side (highest price first)        Ask Side (lowest price first)
 ─────────────────────────────         ─────────────────────────────
@@ -18,8 +16,6 @@ $100.01  [Order D]                    $100.05  [Order E] → [Order F]
 
 Incoming orders are matched against the opposite side using price-time priority.
 Every state transition emits a timestamped Event consumed by the analytics layer.
-
----
 
 ## Data Structures
 
@@ -40,8 +36,6 @@ sorted ascending. Best bid is always `bids_.begin()`, best ask is always
 A secondary hash map (`order_locations_`) maps order ID to side and price 
 level for O(1) cancel routing.
 
----
-
 ## Order Types
 
 | Type   | Behavior |
@@ -50,8 +44,6 @@ level for O(1) cancel routing.
 | Market | Match immediately at any available price |
 | IOC    | Match what is available immediately, cancel remainder |
 | FOK    | Fill entire quantity or reject completely (coming soon) |
-
----
 
 ## Event Log
 
@@ -66,8 +58,6 @@ Every state transition emits a typed, nanosecond-timestamped Event:
 The event log is the interface between the matching engine and the analytics 
 layer. The engine is a black box that accepts orders and emits events.
 
----
-
 ## Verified Behavior
 TEST 1: Build book with 2 bids and 2 asks
 best bid: 9950 | best ask: 10000 | spread: 50 ✓
@@ -77,8 +67,6 @@ TEST 3: Cancel resting bid order
 bid depth reduced, best bid updates correctly ✓
 TEST 4: Limit buy crosses spread, partially matches, remainder rests
 2 events, book state correct ✓
-
----
 
 ## Build
 
@@ -93,8 +81,6 @@ ninja
 
 Requires: CMake 3.20+, C++20 compiler, Ninja
 
----
-
 ## Roadmap
 
 - [x] Order and Event data models
@@ -108,8 +94,6 @@ Requires: CMake 3.20+, C++20 compiler, Ninja
 - [ ] Ornstein-Uhlenbeck mid-price process
 - [ ] Analytics layer — spread, market impact, queue position fill rates
 - [ ] Latency benchmarks — p50, p99, p99.9 under load
-
----
 
 ## References
 
