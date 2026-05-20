@@ -1,76 +1,67 @@
 # Apex
 
-A low-latency limit order book and exchange simulation engine written in C++20.
+> A low-latency limit order book and exchange simulation engine — C++20
 
-Implements price-time priority matching with support for limit, market, and IOC 
-order types. Built to study the systems engineering problems inside financial 
-exchanges — specifically, how data structure choices and concurrency design 
-determine latency characteristics at scale.
+Apex models the core infrastructure of a financial exchange. It implements price-time priority matching across a two-sided order book, synthetic market participants, and a nanosecond-resolution event pipeline — built to study the systems engineering problems that determine latency characteristics at scale.
+
+---
 
 ## Architecture
-Bid Side (highest price first)   
-$100.02  [Order A] → [Order B]      
-$100.01  [Order D]      
 
-Ask Side (lowest price first)
-$100.03  [Order C]
-$100.05  [Order E] → [Order F]
+<img width="1440" height="1040" alt="image" src="https://github.com/user-attachments/assets/eda95868-b836-49ff-bb57-898c6fd5d3d1" />
 
-↕ matching engine ↕
+---
 
-Incoming orders are matched against the opposite side using price-time priority.
-Every state transition emits a timestamped Event consumed by the analytics layer.
+## What's built
 
-## Data Structures
+### Order book — `include/apex/order_book.hpp`
 
-### PriceLevel
-Each price point maintains a FIFO queue of resting orders implemented as a 
-doubly-linked list (`std::list`) with a parallel hash map from order ID to 
-list iterator. This gives O(1) insertion, O(1) cancellation, and O(1) fill 
-from the front — critical at exchange-level throughput.
+Two `std::map` containers — bids sorted descending (`std::greater`), asks sorted ascending. Best bid is always `bids_.begin()`, best ask always `asks_.begin()` — O(log n) insert, O(1) best-price lookup.
 
-Naive implementations use linear scan for cancellation (O(n)). At hundreds of 
-thousands of cancels per second, this is catastrophically slow.
+A secondary hash map (`order_locations_`) maps order ID → side + price level for O(1) cancel routing without scanning.
 
-### OrderBook
-Two `std::map` containers — bids sorted descending (`std::greater`), asks 
-sorted ascending. Best bid is always `bids_.begin()`, best ask is always 
-`asks_.begin()` — O(log n) insertion, O(1) best price lookup.
+### Price level — `include/apex/price_level.hpp`
 
-A secondary hash map (`order_locations_`) maps order ID to side and price 
-level for O(1) cancel routing.
+Each price point holds a FIFO queue of resting orders:
 
-## Order Types
+Price $100.00:
+[Order 1: 200] → [Order 2: 150] → [Order 3: 300]
+↑                 ↑                 ↑
+order_map[1]      order_map[2]      order_map[3]
 
-| Type   | Behavior |
-|--------|----------|
-| Limit  | Match at specified price or better, rest remainder on book |
-| Market | Match immediately at any available price |
-| IOC    | Match what is available immediately, cancel remainder |
-| FOK    | Fill entire quantity or reject completely (coming soon) |
+`std::list` gives stable iterators. The parallel `std::unordered_map` stores each order's iterator, making cancel O(1). Naive implementations scan linearly — catastrophic at exchange throughput.
 
-## Event Log
+### Matching algorithm
 
-Every state transition emits a typed, nanosecond-timestamped Event:
+When a buy order arrives: walk asks from lowest price upward. Match while `buyer_price >= ask_price`. Consume liquidity, emit fill events, remove empty levels. Remainder rests on book (limit) or is discarded (IOC).
 
-- `OrderAdded` — resting limit order entered the book
-- `OrderCancelled` — order removed before fill
-- `OrderPartiallyFilled` — order matched against part of a price level
-- `OrderFilled` — order fully matched
-- `TradeExecuted` — a trade occurred between two counterparties
+Market orders bypass the price check entirely — they match at any available price.
 
-The event log is the interface between the matching engine and the analytics 
-layer. The engine is a black box that accepts orders and emits events.
+---
 
-## Verified Behavior
-TEST 1: Build book with 2 bids and 2 asks
+## Order types
+
+| Type | Behaviour |
+|------|-----------|
+| Limit | Match at price or better, rest remainder on book |
+| Market | Match immediately at any price |
+| IOC | Match available quantity, cancel remainder |
+| FOK | Fill entire quantity or reject — coming soon |
+
+---
+
+## Verified behaviour
+
+Build book: 2 bids, 2 asks
 best bid: 9950 | best ask: 10000 | spread: 50 ✓
-TEST 2: Market buy of 100 matches against best ask
-1 fill event emitted, ask depth reduced by 100 ✓
-TEST 3: Cancel resting bid order
-bid depth reduced, best bid updates correctly ✓
-TEST 4: Limit buy crosses spread, partially matches, remainder rests
-2 events, book state correct ✓
+Market buy 100 → matches against best ask
+1 fill event · ask depth -100 ✓
+Cancel resting bid order
+bid depth decreases · best bid updates ✓
+Limit buy crosses spread → partial match + remainder rests
+2 events · book state correct ✓
+
+---
 
 ## Build
 
@@ -85,22 +76,29 @@ ninja
 
 Requires: CMake 3.20+, C++20 compiler, Ninja
 
+---
+
 ## Roadmap
 
 - [x] Order and Event data models
-- [x] PriceLevel with O(1) cancel
-- [x] OrderBook with price-time priority matching
+- [x] PriceLevel — O(1) insert, cancel, fill
+- [x] OrderBook — price-time priority matching
 - [x] Limit, market, IOC order types
-- [ ] Lock-free disruptor ring buffer for inter-thread communication
-- [ ] CPU thread pinning and cache line alignment
-- [ ] Avellaneda-Stoikov market maker simulation
-- [ ] Informed trader and noise trader agents
+- [ ] Lock-free LMAX Disruptor ring buffer
+- [ ] CPU thread pinning · cache-line alignment · huge pages
+- [ ] Circular price level array — O(1) vs std::map baseline benchmark  
 - [ ] Ornstein-Uhlenbeck mid-price process
-- [ ] Analytics layer — spread, market impact, queue position fill rates
-- [ ] Latency benchmarks — p50, p99, p99.9 under load
+- [ ] Avellaneda-Stoikov market maker agent
+- [ ] Poisson informed traders · noise traders
+- [ ] Analytics — spread dynamics, market impact, queue fill rates
+- [ ] Latency histograms — p50 / p99 / p99.9 under load
+- [ ] Streamlit live dashboard
+
+---
 
 ## References
 
 - Avellaneda & Stoikov (2008) — *High-frequency trading in a limit order book*
-- LMAX Disruptor (2011) — *Mechanical sympathy in concurrent systems*
+- LMAX Disruptor (2011) — *Mechanical sympathy and lock-free concurrency*
 - Cartea, Jaimungal & Penalva — *Algorithmic and High-Frequency Trading*
+- Glosten & Milgrom (1985) — *Bid, ask and transaction prices in a specialist market*
