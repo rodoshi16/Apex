@@ -4,13 +4,9 @@
 
 Apex models the core infrastructure of a financial exchange. It implements price-time priority matching across a two-sided order book, synthetic market participants, and a nanosecond-resolution event pipeline — built to study the systems engineering problems that determine latency characteristics at scale.
 
----
-
 ## Architecture
 
-<img width="1440" height="1040" alt="image" src="https://github.com/user-attachments/assets/eda95868-b836-49ff-bb57-898c6fd5d3d1" />
-
----
+<img width="1215" height="806" alt="178BB44D-9B0C-4733-BC2B-783A08F7603E_1_201_a" src="https://github.com/user-attachments/assets/252fc4fa-d4a7-45a6-9446-560b035ca9a4" />
 
 ## What's built
 
@@ -37,8 +33,6 @@ When a buy order arrives: walk asks from lowest price upward. Match while `buyer
 
 Market orders bypass the price check entirely — they match at any available price.
 
----
-
 ## Order types
 
 | Type | Behaviour |
@@ -48,7 +42,6 @@ Market orders bypass the price check entirely — they match at any available pr
 | IOC | Match available quantity, cancel remainder |
 | FOK | Fill entire quantity or reject — coming soon |
 
----
 
 ## Verified behaviour
 
@@ -61,7 +54,6 @@ bid depth decreases · best bid updates ✓
 Limit buy crosses spread → partial match + remainder rests
 2 events · book state correct ✓
 
----
 
 ## Build
 
@@ -75,26 +67,6 @@ ninja
 ```
 
 Requires: CMake 3.20+, C++20 compiler, Ninja
-
----
-
-## Roadmap
-
-- [x] Order and Event data models
-- [x] PriceLevel — O(1) insert, cancel, fill
-- [x] OrderBook — price-time priority matching
-- [x] Limit, market, IOC order types
-- [ ] Lock-free LMAX Disruptor ring buffer
-- [ ] CPU thread pinning · cache-line alignment · huge pages
-- [ ] Circular price level array — O(1) vs std::map baseline benchmark  
-- [ ] Ornstein-Uhlenbeck mid-price process
-- [ ] Avellaneda-Stoikov market maker agent
-- [ ] Poisson informed traders · noise traders
-- [ ] Analytics — spread dynamics, market impact, queue fill rates
-- [ ] Latency histograms — p50 / p99 / p99.9 under load
-- [ ] Streamlit live dashboard
-
----
 
 ## References
 
