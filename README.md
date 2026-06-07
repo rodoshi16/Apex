@@ -66,8 +66,6 @@ ninja
 ./apex
 ```
 
-Requires: CMake 3.20+, C++20 compiler, Ninja
-
 ## References
 
 - Avellaneda & Stoikov (2008) — *High-frequency trading in a limit order book*
