@@ -44,6 +44,7 @@ private:
     std::unordered_map<uint64_t, OrderLocation> order_locations_;
 
     void match(Order& incoming, std::vector<Event>& events_out);
+    bool can_fill(const Order& order) const;
 };
 
 } // namespace apex

@@ -24,6 +24,26 @@ uint64_t OrderBook::ask_depth() const {
     return total;
 }
 
+bool OrderBook::can_fill(const Order& order) const {
+    uint64_t available = 0;
+
+    if (order.is_buy()) {
+        for (const auto& [price, level] : asks_) {
+            if (order.price != 0 && price > order.price) break;
+            available += level.total_quantity();
+            if (available >= order.quantity) return true;
+        }
+    } else {
+        for (const auto& [price, level] : bids_) {
+            if (order.price != 0 && price < order.price) break;
+            available += level.total_quantity();
+            if (available >= order.quantity) return true;
+        }
+    }
+
+    return false;
+}
+
 void OrderBook::match(Order& incoming, std::vector<Event>& events_out) {
     bool is_market = incoming.type == OrderType::Market;
 
@@ -95,6 +115,9 @@ void OrderBook::add_order(Order order, std::vector<Event>& events_out) {
             order.side
         });
     }
+
+// FOK — handled before matching, so nothing to do here
+// FOK orders are rejected entirely in add_order if can_fill returns false
 }
 
 void OrderBook::cancel_order(uint64_t order_id, std::vector<Event>& events_out) {
