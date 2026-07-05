@@ -73,6 +73,22 @@ void OrderBook::match(Order& incoming, std::vector<Event>& events_out) {
 }
 
 void OrderBook::add_order(Order order, std::vector<Event>& events_out) {
+    // FOK: check if full fill is possible before touching anything
+    if (order.type == OrderType::FOK) {
+        if (!can_fill(order)) {
+            events_out.push_back(Event{
+                EventType::OrderCancelled,
+                order.timestamp_ns,
+                order.order_id,
+                0,
+                order.price,
+                order.quantity,
+                order.side
+            });
+            return;
+        }
+    }
+
     // Try to match first
     match(order, events_out);
 

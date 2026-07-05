@@ -10,56 +10,72 @@ Order make_limit(uint64_t id, Side side, int64_t price, uint64_t qty) {
     return Order{id, 0, price, qty, 0, side, OrderType::Limit, OrderStatus::New};
 }
 
-Order make_market(uint64_t id, Side side, uint64_t qty) {
-    return Order{id, 0, 0, qty, 0, side, OrderType::Market, OrderStatus::New};
+Order make_fok(uint64_t id, Side side, int64_t price, uint64_t qty) {
+    return Order{id, 0, price, qty, 0, side, OrderType::FOK, OrderStatus::New};
 }
 
-void print_book(const OrderBook& book) {
-    std::cout << "  best bid: ";
-    if (book.has_bid()) std::cout << book.best_bid().value();
-    else std::cout << "none";
-
-    std::cout << " | best ask: ";
-    if (book.has_ask()) std::cout << book.best_ask().value();
-    else std::cout << "none";
-
-    std::cout << " | spread: " << book.spread() << "\n";
-    std::cout << "  bid depth: " << book.bid_depth();
-    std::cout << " | ask depth: " << book.ask_depth() << "\n";
+void print_event(const Event& e) {
+    const char* type = "unknown";
+    switch (e.type) {
+        case EventType::OrderAdded:         type = "OrderAdded";         break;
+        case EventType::OrderCancelled:     type = "OrderCancelled";     break;
+        case EventType::OrderFilled:        type = "OrderFilled";        break;
+        case EventType::OrderPartiallyFilled: type = "PartialFilled";    break;
+        case EventType::TradeExecuted:      type = "TradeExecuted";      break;
+        default: break;
+    }
+    std::cout << "  [" << type << "] order=" << e.order_id
+              << " qty=" << e.quantity << " price=" << e.price << "\n";
 }
 
 int main() {
-    OrderBook book;
     std::vector<Event> events;
 
-    std::cout << "=== TEST 1: Build the book ===\n";
-    book.add_order(make_limit(1, Side::Bid, 9900, 100), events);
-    book.add_order(make_limit(2, Side::Bid, 9950, 200), events);
-    book.add_order(make_limit(3, Side::Ask, 10000, 150), events);
-    book.add_order(make_limit(4, Side::Ask, 10050, 100), events);
-    print_book(book);
-    // best bid should be 9950, best ask 10000, spread 50
+    // TEST 1: FOK rejected — not enough liquidity
+    std::cout << "=== TEST 1: FOK rejected — insufficient liquidity ===\n";
+    {
+        OrderBook book;
+        book.add_order(make_limit(1, Side::Ask, 10000, 50), events);
+        events.clear();
 
-    std::cout << "\n=== TEST 2: Market buy order matches against best ask ===\n";
-    events.clear();
-    book.add_order(make_market(5, Side::Bid, 100), events);
-    std::cout << "  events generated: " << events.size() << "\n";
-    print_book(book);
-    // ask at 10000 had 150, we bought 100, so 50 should remain
+        // FOK wants 100 but only 50 available — should be rejected entirely
+        book.add_order(make_fok(2, Side::Bid, 10000, 100), events);
+        std::cout << "  events: " << events.size() << " (expect 1 — cancelled)\n";
+        for (auto& e : events) print_event(e);
+        std::cout << "  ask depth: " << book.ask_depth() << " (expect 50 — untouched)\n";
+    }
 
-    std::cout << "\n=== TEST 3: Cancel a resting order ===\n";
-    events.clear();
-    book.cancel_order(2, events);
-    std::cout << "  events generated: " << events.size() << "\n";
-    print_book(book);
-    // bid depth should drop by 200
+    // TEST 2: FOK accepted — enough liquidity
+    std::cout << "\n=== TEST 2: FOK accepted — sufficient liquidity ===\n";
+    {
+        OrderBook book;
+        events.clear();
+        book.add_order(make_limit(1, Side::Ask, 10000, 100), events);
+        book.add_order(make_limit(2, Side::Ask, 10000, 100), events);
+        events.clear();
 
-    std::cout << "\n=== TEST 4: Limit order crosses the spread and matches ===\n";
-    events.clear();
-    book.add_order(make_limit(6, Side::Bid, 10000, 200), events);
-    std::cout << "  events generated: " << events.size() << "\n";
-    print_book(book);
-    // should match against remaining 50 at ask 10000, then 150 rest on book as bid
+        // FOK wants 150, 200 available — should fill completely
+        book.add_order(make_fok(3, Side::Bid, 10000, 150), events);
+        std::cout << "  events: " << events.size() << " (expect 2 — partial + filled)\n";
+        for (auto& e : events) print_event(e);
+        std::cout << "  ask depth: " << book.ask_depth() << " (expect 50 — 150 consumed)\n";
+    }
+
+    // TEST 3: FOK across multiple price levels
+    std::cout << "\n=== TEST 3: FOK across multiple price levels ===\n";
+    {
+        OrderBook book;
+        events.clear();
+        book.add_order(make_limit(1, Side::Ask, 10000, 100), events);
+        book.add_order(make_limit(2, Side::Ask, 10001, 100), events);
+        events.clear();
+
+        // FOK wants 200 across 2 levels — should fill completely
+        book.add_order(make_fok(3, Side::Bid, 10001, 200), events);
+        std::cout << "  events: " << events.size() << " (expect 2 — both filled)\n";
+        for (auto& e : events) print_event(e);
+        std::cout << "  ask depth: " << book.ask_depth() << " (expect 0 — fully consumed)\n";
+    }
 
     return 0;
 }
