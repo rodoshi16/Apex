@@ -1,80 +1,102 @@
 #include <iostream>
 #include <vector>
+#include <thread>
+#include <chrono>
 #include "apex/order.hpp"
 #include "apex/event.hpp"
 #include "apex/order_book.hpp"
+#include "apex/disruptor.hpp"
 
 using namespace apex;
 
-Order make_limit(uint64_t id, Side side, int64_t price, uint64_t qty) {
-    return Order{id, 0, price, qty, 0, side, OrderType::Limit, OrderStatus::New};
-}
-
-Order make_fok(uint64_t id, Side side, int64_t price, uint64_t qty) {
-    return Order{id, 0, price, qty, 0, side, OrderType::FOK, OrderStatus::New};
-}
-
-void print_event(const Event& e) {
-    const char* type = "unknown";
-    switch (e.type) {
-        case EventType::OrderAdded:         type = "OrderAdded";         break;
-        case EventType::OrderCancelled:     type = "OrderCancelled";     break;
-        case EventType::OrderFilled:        type = "OrderFilled";        break;
-        case EventType::OrderPartiallyFilled: type = "PartialFilled";    break;
-        case EventType::TradeExecuted:      type = "TradeExecuted";      break;
-        default: break;
-    }
-    std::cout << "  [" << type << "] order=" << e.order_id
-              << " qty=" << e.quantity << " price=" << e.price << "\n";
-}
-
 int main() {
+    Disruptor disruptor;
+    OrderBook book;
     std::vector<Event> events;
+    events.reserve(64);
 
-    // TEST 1: FOK rejected — not enough liquidity
-    std::cout << "=== TEST 1: FOK rejected — insufficient liquidity ===\n";
-    {
-        OrderBook book;
-        book.add_order(make_limit(1, Side::Ask, 10000, 50), events);
-        events.clear();
+    std::atomic<bool> done{false};
+    std::atomic<int64_t> orders_processed{0};
 
-        // FOK wants 100 but only 50 available — should be rejected entirely
-        book.add_order(make_fok(2, Side::Bid, 10000, 100), events);
-        std::cout << "  events: " << events.size() << " (expect 1 — cancelled)\n";
-        for (auto& e : events) print_event(e);
-        std::cout << "  ask depth: " << book.ask_depth() << " (expect 50 — untouched)\n";
+    // Consumer thread — the matching engine
+    std::thread consumer([&]() {
+        Order order;
+        while (!done.load(std::memory_order_relaxed) ||
+               disruptor.producer_sequence() > disruptor.consumer_sequence()) {
+            if (disruptor.consume(order)) {
+                events.clear();
+                book.add_order(order, events);
+                orders_processed.fetch_add(1, std::memory_order_relaxed);
+            }
+        }
+    });
+
+    // Producer — submits orders into the ring buffer
+    std::cout << "=== TEST 1: Single producer publishing orders ===\n";
+    uint64_t id = 0;
+    int64_t  published = 0;
+
+    // Publish 500 bids and 500 asks
+    for (int i = 0; i < 500; ++i) {
+        Order bid{id++, 0, int64_t(9900 + (i % 10)), 100, 0,
+                  Side::Bid, OrderType::Limit, OrderStatus::New};
+        while (!disruptor.publish(bid)) {} // spin if full
+        published++;
     }
 
-    // TEST 2: FOK accepted — enough liquidity
-    std::cout << "\n=== TEST 2: FOK accepted — sufficient liquidity ===\n";
-    {
-        OrderBook book;
-        events.clear();
-        book.add_order(make_limit(1, Side::Ask, 10000, 100), events);
-        book.add_order(make_limit(2, Side::Ask, 10000, 100), events);
-        events.clear();
-
-        // FOK wants 150, 200 available — should fill completely
-        book.add_order(make_fok(3, Side::Bid, 10000, 150), events);
-        std::cout << "  events: " << events.size() << " (expect 2 — partial + filled)\n";
-        for (auto& e : events) print_event(e);
-        std::cout << "  ask depth: " << book.ask_depth() << " (expect 50 — 150 consumed)\n";
+    for (int i = 0; i < 500; ++i) {
+        Order ask{id++, 0, int64_t(10000 + (i % 10)), 100, 0,
+                  Side::Ask, OrderType::Limit, OrderStatus::New};
+        while (!disruptor.publish(ask)) {}
+        published++;
     }
 
-    // TEST 3: FOK across multiple price levels
-    std::cout << "\n=== TEST 3: FOK across multiple price levels ===\n";
-    {
-        OrderBook book;
-        events.clear();
-        book.add_order(make_limit(1, Side::Ask, 10000, 100), events);
-        book.add_order(make_limit(2, Side::Ask, 10001, 100), events);
-        events.clear();
+    // Wait for consumer to drain
+    while (orders_processed.load() < published) {
+        std::this_thread::yield();
+    }
 
-        // FOK wants 200 across 2 levels — should fill completely
-        book.add_order(make_fok(3, Side::Bid, 10001, 200), events);
-        std::cout << "  events: " << events.size() << " (expect 2 — both filled)\n";
-        for (auto& e : events) print_event(e);
-        std::cout << "  ask depth: " << book.ask_depth() << " (expect 0 — fully consumed)\n";
+    done.store(true, std::memory_order_relaxed);
+    consumer.join();
+
+    std::cout << "  published:  " << published << "\n";
+    std::cout << "  processed:  " << orders_processed.load() << "\n";
+    std::cout << "  best bid:   " << book.best_bid().value_or(-1) << "\n";
+    std::cout << "  best ask:   " << book.best_ask().value_or(-1) << "\n";
+    std::cout << "  bid depth:  " << book.bid_depth() << "\n";
+    std::cout << "  ask depth:  " << book.ask_depth() << "\n";
+
+    std::cout << "\n=== TEST 2: Producer sequence tracking ===\n";
+    {
+        Disruptor d;
+        Order o{1, 0, 10000, 100, 0, Side::Bid, OrderType::Limit, OrderStatus::New};
+
+        d.publish(o);
+        std::cout << "  after 1 publish — producer seq: "
+                  << d.producer_sequence() << " (expect 0)\n";
+
+        Order out;
+        d.consume(out);
+        std::cout << "  after 1 consume — consumer seq: "
+                  << d.consumer_sequence() << " (expect 0)\n";
+        std::cout << "  consumed order id: " << out.order_id << " (expect 1)\n";
+    }
+
+    std::cout << "\n=== TEST 3: Buffer full detection ===\n";
+    {
+        Disruptor d;
+        Order o{1, 0, 10000, 100, 0, Side::Bid, OrderType::Limit, OrderStatus::New};
+
+        int64_t count = 0;
+        while (d.publish(o)) count++;
+
+        std::cout << "  slots filled before full: " << count
+                  << " (expect 1024)\n";
+
+        // Should reject now
+        bool rejected = !d.publish(o);
+        std::cout << "  next publish rejected: " << rejected
+                  << " (expect 1)\n";
     }
 
     return 0;
