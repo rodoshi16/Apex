@@ -46,7 +46,7 @@ build cmake_object_order_depends_target_apex_lib: phony || .
 
 build CMakeFiles/apex_lib.dir/src/price_level.cpp.o: CXX_COMPILER__apex_lib_unscanned_ /Users/rodoshimondal/apex/src/price_level.cpp || cmake_object_order_depends_target_apex_lib
   DEP_FILE = CMakeFiles/apex_lib.dir/src/price_level.cpp.o.d
-  FLAGS = -std=gnu++20 -arch arm64
+  FLAGS = -std=gnu++20 -arch arm64 -O2
   INCLUDES = -I/Users/rodoshimondal/apex/include
   OBJECT_DIR = CMakeFiles/apex_lib.dir
   OBJECT_FILE_DIR = CMakeFiles/apex_lib.dir/src
@@ -54,7 +54,7 @@ build CMakeFiles/apex_lib.dir/src/price_level.cpp.o: CXX_COMPILER__apex_lib_unsc
 
 build CMakeFiles/apex_lib.dir/src/order_book.cpp.o: CXX_COMPILER__apex_lib_unscanned_ /Users/rodoshimondal/apex/src/order_book.cpp || cmake_object_order_depends_target_apex_lib
   DEP_FILE = CMakeFiles/apex_lib.dir/src/order_book.cpp.o.d
-  FLAGS = -std=gnu++20 -arch arm64
+  FLAGS = -std=gnu++20 -arch arm64 -O2
   INCLUDES = -I/Users/rodoshimondal/apex/include
   OBJECT_DIR = CMakeFiles/apex_lib.dir
   OBJECT_FILE_DIR = CMakeFiles/apex_lib.dir/src
@@ -614,7 +614,7 @@ build _deps/googlebenchmark-build/install/strip: phony _deps/googlebenchmark-bui
 build cmake_object_order_depends_target_benchmark: phony || .
 
 build _deps/googlebenchmark-build/src/CMakeFiles/benchmark.dir/benchmark.cc.o: CXX_COMPILER__benchmark_unscanned_ /Users/rodoshimondal/apex/build/_deps/googlebenchmark-src/src/benchmark.cc || cmake_object_order_depends_target_benchmark
-  DEFINES = -DBENCHMARK_STATIC_DEFINE -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -DHAVE_THREAD_SAFETY_ATTRIBUTES -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_LARGEFILE_SOURCE -DBENCHMARK_VERSION=\"v1.9.5-54-gdea73efb\"
+  DEFINES = -DBENCHMARK_STATIC_DEFINE -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -DHAVE_THREAD_SAFETY_ATTRIBUTES -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_LARGEFILE_SOURCE -DBENCHMARK_VERSION=\"v1.9.5-91-gb3a8d2f8\"
   DEP_FILE = _deps/googlebenchmark-build/src/CMakeFiles/benchmark.dir/benchmark.cc.o.d
   FLAGS = -Wall  -Wextra  -Wshadow  -Wfloat-equal  -Wold-style-cast  -Wconversion  -Wformat=2  -Werror  -pedantic-errors  -pedantic  -Wshorten-64-to-32  -fstrict-aliasing  -Wno-deprecated-declarations  -Wno-deprecated  -Wstrict-aliasing  -Wthread-safety -std=c++17 -arch arm64 -fvisibility=hidden -fvisibility-inlines-hidden
   INCLUDES = -I/Users/rodoshimondal/apex/build/_deps/googlebenchmark-src/include -I/Users/rodoshimondal/apex/build/_deps/googlebenchmark-src/src
@@ -2985,7 +2985,7 @@ build cmake_object_order_depends_target_apex_bench: phony || cmake_object_order_
 build benchmarks/CMakeFiles/apex_bench.dir/bench_order_book.cpp.o: CXX_COMPILER__apex_bench_unscanned_ /Users/rodoshimondal/apex/benchmarks/bench_order_book.cpp || cmake_object_order_depends_target_apex_bench
   DEFINES = -DBENCHMARK_STATIC_DEFINE
   DEP_FILE = benchmarks/CMakeFiles/apex_bench.dir/bench_order_book.cpp.o.d
-  FLAGS = -std=gnu++20 -arch arm64
+  FLAGS = -std=gnu++20 -arch arm64 -O2 -DNDEBUG
   INCLUDES = -I/Users/rodoshimondal/apex/include -I/Users/rodoshimondal/apex/build/_deps/googlebenchmark-src/include
   OBJECT_DIR = benchmarks/CMakeFiles/apex_bench.dir
   OBJECT_FILE_DIR = benchmarks/CMakeFiles/apex_bench.dir

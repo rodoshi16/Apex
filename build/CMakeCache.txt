@@ -45,6 +45,9 @@ BENCHMARK_ENABLE_LIBPFM:BOOL=OFF
 //Enable link time optimisation of the benchmark library.
 BENCHMARK_ENABLE_LTO:BOOL=OFF
 
+//Enable testing of the Rust bindings
+BENCHMARK_ENABLE_RUST_BINDINGS:BOOL=OFF
+
 //Enable testing of the benchmark library.
 BENCHMARK_ENABLE_TESTING:BOOL=ON
 

@@ -25,6 +25,7 @@ target_include_directories(apex_lib PUBLIC ${CMAKE_SOURCE_DIR}/include)
 add_executable(apex src/main.cpp)
 target_link_libraries(apex PRIVATE apex_lib)
 target_compile_options(apex PRIVATE -Wall -Wextra -O2)
+target_compile_options(apex_lib PRIVATE -O2)
 
 add_subdirectory(tests)
 add_subdirectory(benchmarks)

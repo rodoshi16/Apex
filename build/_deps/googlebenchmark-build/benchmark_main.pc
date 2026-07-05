@@ -1,7 +1,9 @@
-libdir=/usr/local/lib
+prefix=/usr/local
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
 
 Name: benchmark
 Description: Google microbenchmark framework (with main() function)
-Version: 1.9.5.54
+Version: 1.9.5.91
 Requires: benchmark
 Libs: -L${libdir} -lbenchmark_main
