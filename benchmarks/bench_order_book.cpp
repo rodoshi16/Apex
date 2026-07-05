@@ -21,7 +21,8 @@ static void BM_AddLimitOrder(benchmark::State& state) {
 
     for (auto _ : state) {
         events.clear();
-        Order o = make_limit(id++, Side::Bid, 10000 - (id % 10), 100);
+        int64_t price = 10000 - (id % 10);
+        Order o = make_limit(id++, Side::Bid, price, 100);
         book.add_order(o, events);
     }
 
