@@ -3,7 +3,6 @@
 
 Apex models the core infrastructure of a financial exchange. It implements price-time priority matching across a two-sided order book, a lock-free disruptor ring buffer for inter-thread order passing, and a nanosecond-resolution event pipeline — built to study the systems engineering problems that determine latency characteristics at scale.
 
----
 
 ## Benchmark results
 
@@ -17,13 +16,11 @@ Apex models the core infrastructure of a financial exchange. It implements price
 
 **Pool vs heap: 2.7x faster.** Measured via Google Benchmark at 1M iterations with `-O2 -DNDEBUG`.
 
----
 
 ## Architecture
 
 <img width="1215" height="806" alt="178BB44D-9B0C-4733-BC2B-783A08F7603E_1_201_a" src="https://github.com/user-attachments/assets/252fc4fa-d4a7-45a6-9446-560b035ca9a4" />
 
----
 
 ## What's built
 
@@ -67,8 +64,6 @@ When a buy order arrives: walk asks from lowest price upward. Match while `buyer
 
 FOK performs a pre-flight liquidity check before touching the book — if full fill is impossible, the order is rejected entirely with zero book modification.
 
----
-
 ## Order types
 
 | Type | Behaviour |
@@ -78,7 +73,6 @@ FOK performs a pre-flight liquidity check before touching the book — if full f
 | IOC | Match available quantity, cancel remainder |
 | FOK | Pre-flight liquidity check — fill entirely or reject, book untouched |
 
----
 
 ## Verified behaviour
 
@@ -114,8 +108,6 @@ The order book is stateful and not safely shareable. Two threads matching simult
 **Why `alignas(64)` on disruptor sequences?**
 A cache line is 64 bytes. If producer and consumer sequences share a cache line, every write by the producer invalidates the consumer's cache — and vice versa — even though they're touching different variables. This is false sharing. `alignas(64)` forces each onto its own line, eliminating the cross-core invalidation traffic.
 
----
-
 ## Build
 
 ```bash
@@ -130,7 +122,6 @@ ninja
 
 Requires: CMake 3.20+, C++20 compiler, Ninja
 
----
 
 ## Roadmap
 
@@ -150,7 +141,6 @@ Requires: CMake 3.20+, C++20 compiler, Ninja
 - [ ] Latency histograms — p50 / p99 / p99.9 under concurrent load
 - [ ] Streamlit live dashboard
 
----
 
 ## References
 
