@@ -3,7 +3,10 @@
 
 namespace apex {
 
-enum class Side : uint8_t { Bid, Ask };
+enum class Side : uint8_t {
+    Bid, 
+    Ask 
+};
 
 enum class OrderType : uint8_t {
     Limit,
@@ -38,4 +41,4 @@ struct Order {
     bool is_sell() const { return side == Side::Ask; }
 };
 
-} // namespace apex
+}

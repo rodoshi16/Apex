@@ -14,7 +14,7 @@ static Order make_market(uint64_t id, Side side, uint64_t qty) {
 
 // Benchmark 1: Add limit orders to the book
 static void BM_AddLimitOrder(benchmark::State& state) {
-    OrderBook book;
+    OrderBook book; 
     uint64_t id = 0;
     std::vector<Event> events;
     events.reserve(16);
